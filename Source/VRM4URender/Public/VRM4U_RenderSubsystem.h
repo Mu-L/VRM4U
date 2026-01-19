@@ -7,6 +7,7 @@
 #include "Misc/EngineVersionComparison.h"
 #include "VrmSceneViewExtension.h"
 #include "VrmExtensionRimFilterData.h"
+#include "VRM4URender.h"
 
 #if WITH_EDITOR
 #include "UnrealEdMisc.h"
@@ -23,38 +24,6 @@
 
 #endif
 
-UENUM()
-enum EVRM4U_CaptureSource : int
-{
-	ColorTexturePostOpaque,
-	ColorTextureOverlay,
-	DepthTexture,
-	NormalTexture,
-	VelocityTexture,
-	//SmallDepthTexture,
-
-	SceneColorTexturePostOpaque,
-	SceneColorTextureOverlay,
-	SceneDepthTexture,
-	//ScenePartialDepthTexture,
-
-	// GBuffer
-	GBufferATexture,
-	GBufferBTexture,
-	GBufferCTexture,
-	GBufferDTexture,
-	GBufferETexture,
-	GBufferFTexture,
-	GBufferVelocityTexture,
-
-	// SSAO
-	ScreenSpaceAOTexture,
-
-	// Custom Depth / Stencil
-	CustomDepthTexture,
-
-	//CaptureSource_MAX,
-};
 
 UCLASS()
 class VRM4URENDER_API UVRM4U_RenderSubsystem : public UEngineSubsystem
@@ -70,6 +39,11 @@ public:
 
 	//// rim filter
 	FCriticalSection cs_rim;
+
+	FPostOpaqueRenderDelegate ppp;
+	FDelegateHandle ddd;
+
+
 
 	TArray< TWeakObjectPtr<class UVrmExtensionRimFilterData> > RimFilterData;
 
@@ -101,11 +75,6 @@ public:
 
 	void OnPIEEvent(bool bPIEBegin, bool bPIEEnd);
 #endif
-
-	TSharedPtr<class FVrmSceneViewExtension, ESPMode::ThreadSafe> SceneViewExtension;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = "VRM4U")
-	TMap<TObjectPtr<UTextureRenderTarget2D>, TEnumAsByte<EVRM4U_CaptureSource> > CaptureList;
 
 	UFUNCTION(BlueprintCallable, Category = "VRM4U")
 	void AddCaptureTexture(UTextureRenderTarget2D *Texture, EVRM4U_CaptureSource CaptureSource);
