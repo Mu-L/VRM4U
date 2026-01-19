@@ -86,12 +86,6 @@ namespace{
 
 void UVRM4U_RenderSubsystem::Initialize(FSubsystemCollectionBase& Collection) {
 	Super::Initialize(Collection);
-
-	SceneViewExtension = FSceneViewExtensions::NewExtension<FVrmSceneViewExtension>();
-	GetRendererModule().RegisterPostOpaqueRenderDelegate(FPostOpaqueRenderDelegate::CreateUObject(this, &UVRM4U_RenderSubsystem::OnPostOpaque));
-	GetRendererModule().RegisterOverlayRenderDelegate(FPostOpaqueRenderDelegate::CreateUObject(this, &UVRM4U_RenderSubsystem::OnOverlay));
-	
-	//GetRendererModule().GetResolvedSceneColorCallbacks().AddUObject(this, &UVRM4U_RenderSubsystem::OnResolvedSceneColor_RenderThread);
 }
 
 void UVRM4U_RenderSubsystem::Deinitialize() {
@@ -109,14 +103,17 @@ void UVRM4U_RenderSubsystem::OnResolvedSceneColor_RenderThread(FRDGBuilder& Grap
 
 #if WITH_EDITOR
 void UVRM4U_RenderSubsystem::OnMapChange(UWorld* World, EMapChangeType ChangeType) {
-	if (ChangeType == EMapChangeType::TearDownWorld)
-	{
-		CaptureList.Empty();
+	FVRM4URenderModule* m = FModuleManager::GetModulePtr<FVRM4URenderModule>("VRM4URender");
+	if (m != nullptr) {
+		m->OnMapChange(World, ChangeType);
 	}
 }
 
 void UVRM4U_RenderSubsystem::OnPIEEvent(bool bPIEBegin, bool bPIEEnd) {
-	bIsPlay = bPIEBegin;
+	FVRM4URenderModule* m = FModuleManager::GetModulePtr<FVRM4URenderModule>("VRM4URender");
+	if (m != nullptr) {
+		m->OnPIEEvent(bPIEBegin, bPIEEnd);
+	}
 }
 #endif
 
@@ -129,27 +126,29 @@ void UVRM4U_RenderSubsystem::RenderPost(FRDGBuilder& GraphBuilder) {
 void UVRM4U_RenderSubsystem::AddCaptureTexture(UTextureRenderTarget2D* Texture, EVRM4U_CaptureSource CaptureSource) {
 	if (Texture == nullptr) return;
 
-	CaptureList.FindOrAdd(Texture) = CaptureSource;
+	FVRM4URenderModule* m = FModuleManager::GetModulePtr<FVRM4URenderModule>("VRM4URender");
+	if (m != nullptr){
+		m->CaptureList.FindOrAdd(Texture) = CaptureSource;
+	}
+
 
 #if WITH_EDITOR
 	if (HandleTearDown.IsValid() == false){
-		if (CaptureList.Num() == 1) {
-			if (FModuleManager::Get().IsModuleLoaded("LevelEditor"))
-			{
-				FLevelEditorModule& LevelEditor = FModuleManager::GetModuleChecked<FLevelEditorModule>("LevelEditor");
+		if (FModuleManager::Get().IsModuleLoaded("LevelEditor"))
+		{
+			FLevelEditorModule& LevelEditor = FModuleManager::GetModuleChecked<FLevelEditorModule>("LevelEditor");
 
 				
-				HandleTearDown = LevelEditor.OnMapChanged().AddUObject(this, &UVRM4U_RenderSubsystem::OnMapChange);
-						/*
-					HandleTearDown = LevelEditor.OnMapChanged().AddLambda([&](UWorld* World, EMapChangeType ChangeType)
+			HandleTearDown = LevelEditor.OnMapChanged().AddUObject(this, &UVRM4U_RenderSubsystem::OnMapChange);
+					/*
+				HandleTearDown = LevelEditor.OnMapChanged().AddLambda([&](UWorld* World, EMapChangeType ChangeType)
+				{
+					if (ChangeType == EMapChangeType::TearDownWorld)
 					{
-						if (ChangeType == EMapChangeType::TearDownWorld)
-						{
-							CaptureList.Empty();
-						}
-					});
-					*/
-			}
+						CaptureList.Empty();
+					}
+				});
+				*/
 		}
 	}
 
@@ -162,17 +161,21 @@ void UVRM4U_RenderSubsystem::AddCaptureTexture(UTextureRenderTarget2D* Texture, 
 			this->OnPIEEvent(false, true);
 			});
 	}
-#else
-	bIsPlay = true;
 #endif
 }
 
 void UVRM4U_RenderSubsystem::RemoveCaptureTexture(UTextureRenderTarget2D* Texture) {
-	CaptureList.Remove(Texture);
+	FVRM4URenderModule* m = FModuleManager::GetModulePtr<FVRM4URenderModule>("VRM4URender");
+	if (m != nullptr) {
+		m->CaptureList.Remove(Texture);
+	}
 }
 
 void UVRM4U_RenderSubsystem::RemoveAllCaptureTexture() {
-	CaptureList.Empty();
+	FVRM4URenderModule* m = FModuleManager::GetModulePtr<FVRM4URenderModule>("VRM4URender");
+	if (m != nullptr) {
+		m->CaptureList.Empty();
+	}
 }
 
 
@@ -181,12 +184,6 @@ void UVRM4U_RenderSubsystem::ResetSceneTextureExtentHistory() {
 }
 
 void UVRM4U_RenderSubsystem::SetViewExtension(bool bEnable) {
-
-	if (SceneViewExtension == nullptr) {
-		return;
-	}
-
-//	SceneViewExtension->
 }
 
 void UVRM4U_RenderSubsystem::AddRimFilterData(class UVrmExtensionRimFilterData* FilterData) {

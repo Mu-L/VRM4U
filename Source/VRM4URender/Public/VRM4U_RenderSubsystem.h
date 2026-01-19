@@ -33,17 +33,11 @@ class VRM4URENDER_API UVRM4U_RenderSubsystem : public UEngineSubsystem
 
 	FDelegateHandle HandleTearDown;
 	bool bInitPIE = false;
-	bool bIsPlay = false;
 
 public:
 
 	//// rim filter
 	FCriticalSection cs_rim;
-
-	FPostOpaqueRenderDelegate ppp;
-	FDelegateHandle ddd;
-
-
 
 	TArray< TWeakObjectPtr<class UVrmExtensionRimFilterData> > RimFilterData;
 
@@ -77,7 +71,7 @@ public:
 #endif
 
 	UFUNCTION(BlueprintCallable, Category = "VRM4U")
-	void AddCaptureTexture(UTextureRenderTarget2D *Texture, EVRM4U_CaptureSource CaptureSource);
+	void AddCaptureTexture(UTextureRenderTarget2D *Texture, EVRM4U_CaptureSource CaptureSource = EVRM4U_CaptureSource::ColorTextureOverlay);
 
 	UFUNCTION(BlueprintCallable, Category = "VRM4U")
 	void RemoveCaptureTexture(UTextureRenderTarget2D* Texture);

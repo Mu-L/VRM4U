@@ -114,6 +114,11 @@ void FVRM4URenderModule::StartupModule(){
 
 	GetRendererModule().RegisterPostOpaqueRenderDelegate(FPostOpaqueRenderDelegate::CreateRaw(this, &FVRM4URenderModule::OnPostOpaque));
 	GetRendererModule().RegisterOverlayRenderDelegate(FPostOpaqueRenderDelegate::CreateRaw(this, &FVRM4URenderModule::OnOverlay));
+
+#if WITH_EDITOR
+#else
+	bIsPlay = true;
+#endif
 }
 
 void FVRM4URenderModule::ShutdownModule(){
@@ -124,7 +129,9 @@ void FVRM4URenderModule::OnPostOpaque(FPostOpaqueRenderParameters& Parameters) {
 	if (CaptureList.Num() == 0) return;
 
 	if (bIsPlay) {
-		if (Parameters.View->PlayerIndex == INDEX_NONE) return;
+		if (Parameters.View->bIsOfflineRender == false) {
+			if (Parameters.View->PlayerIndex == INDEX_NONE) return;
+		}
 	}
 
 	{
@@ -242,7 +249,9 @@ void FVRM4URenderModule::OnOverlay(FPostOpaqueRenderParameters& Parameters) {
 	if (CaptureList.Num() == 0) return;
 
 	if (bIsPlay) {
-		if (Parameters.View->PlayerIndex == INDEX_NONE) return;
+		if (Parameters.View->bIsOfflineRender == false) {
+			if (Parameters.View->PlayerIndex == INDEX_NONE) return;
+		}
 	}
 
 	for (auto c : CaptureList) {

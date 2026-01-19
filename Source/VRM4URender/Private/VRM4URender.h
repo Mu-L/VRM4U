@@ -50,7 +50,6 @@ class FVRM4URenderModule : public FDefaultModuleImpl
 {
 
 	FDelegateHandle HandleTearDown;
-	bool bInitPIE = false;
 	bool bIsPlay = false;
 
 public:
